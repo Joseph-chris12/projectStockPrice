@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Prediksi Harga Saham</h1>
+
+        <form class="search-box" method="POST" action="/">
+            <select name="pilihan_saham" required
+                style="padding: 12px; font-size: 16px; border-radius: 8px; width: 60%; max-width: 300px; border: 1px solid #ccc;">
+                <option value="IHSG" {% if ticker=='IHSG' %}selected{% endif %}>IHSG (Indeks Gabungan)</option>
+                <option value="BBCA" {% if ticker=='BBCA' %}selected{% endif %}>Bank Central Asia (BBCA)</option>
+                <option value="BBRI" {% if ticker=='BBRI' %}selected{% endif %}>Bank Rakyat Indonesia (BBRI)</option>
+                <option value="GOTO" {% if ticker=='GOTO' %}selected{% endif %}>GoTo Gojek Tokopedia (GOTO)</option>
+                <option value="BUMI" {% if ticker=='BUMI' %}selected{% endif %}>Bumi Resources (BUMI)</option>
+                <option value="GOLD" {% if ticker=='GOLD' %}selected{% endif %}>Emas (GOLD)</option>
+            </select>
+            <button type="submit">Prediksi</button>
+        </form>
+
+        {% if error %}
+        <div style="color: red; text-align: center; margin-bottom: 20px;">
+            <strong>{{ error }}</strong>
+        </div>
+        {% endif %}
+
+        <div class="chart-container">
+            <canvas id="stockChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Data yang dikirim dari Flask Jinja2
+        // Dibungkus dalam string dan JSON.parse agar IDE linter (error merah) tidak protes
+        const labels = JSON.parse('{{ labels | default([]) | tojson | safe }}');
+        const dataHistoris = JSON.parse('{{ data_historis | default([]) | tojson | safe }}');
+        const dataPrediksi = JSON.parse('{{ data_prediksi | default([]) | tojson | safe }}');
+
+        const ctx = document.getElementById('stockChart').getContext('2d');
+
+        // Render grafik hanya jika ada data
+        if (labels.length > 0) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Harga Historis Aktual',
+                            data: dataHistoris,
+                            borderColor: '#2ecc71', // Warna Hijau
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Hasil Prediksi (5 Hari)',
+                            data: dataPrediksi,
+                            borderColor: '#e74c3c', // Warna Merah
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.1,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#e74c3c'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: { display: true, text: 'Tanggal / Hari' }
+                        },
+                        y: {
+                            display: true,
+                            title: { display: true, text: 'Harga Saham (IDR)' }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
