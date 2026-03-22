@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Prediksi Harga Saham</h1>
+        
+        <form class="search-box" method="POST" action="/">
+            <input type="text" name="kode_saham" placeholder="Masukkan Kode Saham (Cth: BBCA)" required 
+                   value="{{ ticker | default('') }}">
+            <button type="submit">Prediksi</button>
+        </form>
+
+        <div class="chart-container">
+            <canvas id="stockChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Data yang dikirim dari Flask Jinja2
+        const labels = {{ labels | default("[]") | safe }}; 
+        const dataHistoris = {{ data_historis | default("[]") | safe }}; 
+        const dataPrediksi = {{ data_prediksi | default("[]") | safe }}; 
+
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        
+        // Render grafik hanya jika ada data
+        if (labels.length > 0) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Harga Historis Aktual',
+                            data: dataHistoris,
+                            borderColor: '#2ecc71', // Warna Hijau
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1, 
+                            pointRadius: 0 
+                        },
+                        {
+                            label: 'Hasil Prediksi (5 Hari)',
+                            data: dataPrediksi,
+                            borderColor: '#e74c3c', // Warna Merah
+                            borderWidth: 2,
+                            borderDash: [5, 5], 
+                            tension: 0.1,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#e74c3c'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: { display: true, text: 'Tanggal / Hari' }
+                        },
+                        y: {
+                            display: true,
+                            title: { display: true, text: 'Harga Saham (IDR)' }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
